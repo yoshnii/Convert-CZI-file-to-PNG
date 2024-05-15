@@ -1,0 +1,56 @@
+
+import matplotlib.pyplot as plt
+from aicsimageio import AICSImage
+import numpy as np
+import os
+
+# Define RGB values for the dyes
+dye_colors = {
+    'DAPI': (0, 135, 216),      # Blue: #0087d8
+    'GFP': (0, 233, 46),        # Green: #00e92e
+    'mCherry': (255, 90, 0)     # Red: #ff5a00
+}
+
+def process_and_merge_channels(czi_file_path, output_image_path):
+    img = AICSImage(czi_file_path)
+    num_channels = img.dims.C
+    dims_order = img.dims.order
+
+    y_index = dims_order.index('Y')
+    x_index = dims_order.index('X')
+    rgb_data = np.zeros((img.shape[y_index], img.shape[x_index], 3), dtype=np.uint8)
+
+    # Assign colors to channels
+    channel_colors = [dye_colors['DAPI'], dye_colors['GFP'], dye_colors['mCherry']]
+
+    for c in range(min(num_channels, 3)):  # Ensuring we don't access out-of-range color channels
+        channel_data = img.get_image_data("YX", C=c, S=0, T=0, Z=0)
+        
+        # Normalize channel data to uint8 if necessary
+        if channel_data.dtype != np.uint8:
+            channel_data = (channel_data / channel_data.max() * 255).astype(np.uint8)
+
+        # Assign channel data to the correct color channel
+        for i in range(3):
+            temp = (channel_data * (channel_colors[c][i] / 255)).astype(np.uint8)
+            rgb_data[:, :, i] = np.clip(rgb_data[:, :, i] + temp, 0, 255)
+
+    # Save the merged image
+    plt.imsave(output_image_path, rgb_data)
+
+def batch_process_czi_files(input_directory, output_directory):
+    if not os.path.exists(output_directory):
+        os.makedirs(output_directory)
+
+    for filename in os.listdir(input_directory):
+        if filename.lower().endswith(".czi"):
+            input_path = os.path.join(input_directory, filename)
+            output_filename = f"{filename[:-4]}_merged.png"
+            output_path = os.path.join(output_directory, output_filename)
+            process_and_merge_channels(input_path, output_path)
+            print(f"Processed and saved {output_filename}")
+
+# Example usage
+input_directory = "your_input_directory"
+output_directory = "your output_directory"
+batch_process_czi_files(input_directory, output_directory)
