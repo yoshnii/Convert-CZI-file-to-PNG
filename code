@@ -1,10 +1,11 @@
-
+#this code tries to add the correct LUT and it works!
 import matplotlib.pyplot as plt
 from aicsimageio import AICSImage
 import numpy as np
 import os
 
 # Define RGB values for the dyes
+# All microscopic pictures (both confocal)
 dye_colors = {
     'DAPI': (0, 135, 216),      # Blue: #0087d8
     'GFP': (0, 233, 46),        # Green: #00e92e
@@ -51,6 +52,8 @@ def batch_process_czi_files(input_directory, output_directory):
             print(f"Processed and saved {output_filename}")
 
 # Example usage
-input_directory = "your_input_directory"
-output_directory = "your output_directory"
+input_directory = "/Users/abc/Desktop/FYP_image"
+output_directory = "/Users/abc/Desktop/Processed"
 batch_process_czi_files(input_directory, output_directory)
+
+
